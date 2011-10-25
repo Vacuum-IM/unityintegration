@@ -135,11 +135,16 @@ void UnityIntegration::onNotificationRemoved(int ANotifyId)
 }
 
 
-void UnityIntegration::onStreamCreated(IFileStream *AStream)
+void UnityIntegration::onStreamDestroyed(IFileStream *AStream)
 {
     connect(AStream->instance(), SIGNAL(progressChanged()),SLOT(onStreamProgressChanged()));
 
     UpdateStreamProgress(AStream);
+}
+
+void UnityIntegration::onStreamCreated(IFileStream *AStream)
+{
+
 }
 
 void UnityIntegration::onStreamProgressChanged()
