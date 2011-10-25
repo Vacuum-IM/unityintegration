@@ -39,7 +39,7 @@ win32 {
 }
 
 #Translation
-TRANSLATIONS        = ./translations/src/ru_RU/$${TARGET}.ts
+include(translations.inc)
 
 #Install
 
