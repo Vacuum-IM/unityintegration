@@ -13,8 +13,14 @@ file(GLOB SOURCES "*.cpp")
 file(GLOB HEADERS "*.h")
 file(GLOB UIS "**.ui")
 
-set(ADD_LIBS "dbusmenu-qt")
-include_directories("${CMAKE_INSTALL_PREFIX}/include/dbusmenu-qt/")
+#set(ADD_LIBS "dbusmenu-qt")
+#include_directories("${CMAKE_INSTALL_PREFIX}/include/dbusmenu-qt/")
+
+FIND_PACKAGE(PkgConfig)
+pkg_check_modules(DBUSMENUQT dbusmenu-qt>=0.8.1)
+
+LINK_LIBRARIES (${DBUSMENUQT_LIBRARIES})
+include_directories (${DBUSMENUQT_INCLUDE_DIRS})
 
 if (NOT (UNIX AND NOT APPLE))
 message(FATAL_ERROR "Supported only on *nix")
