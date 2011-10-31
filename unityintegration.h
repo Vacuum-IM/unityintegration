@@ -74,6 +74,7 @@ private:
         QList<int> FNotificationCount;
         QWeakPointer<DBusMenuExporter> menu_export;
         QDBusInterface *FUnityDetector;
+        QDBusInterface *FThirdUnityInterfaceDetector;
 
 
 };

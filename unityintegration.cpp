@@ -25,11 +25,12 @@ void UnityIntegration::pluginInfo(IPluginInfo *APluginInfo)
 bool UnityIntegration::initConnections(IPluginManager *APluginManager, int &/*AInitOrder*/)
 {
 
-    FUnityDetector = new QDBusInterface("com.canonical.Unity","/Unity","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
+    FUnityDetector = new QDBusInterface("com.canonical.Unity","/com/canonical/Unity/Launcher","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
+    FThirdUnityInterfaceDetector = new QDBusInterface("com.canonical.Unity","/Unity","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
 
-            if(FUnityDetector->lastError().type() != QDBusError::NoError)
+            if((FUnityDetector->lastError().type() != QDBusError::NoError) & (FThirdUnityInterfaceDetector->lastError().type() != QDBusError::NoError))
             {
-                   qWarning() << "DBus Ubuntu Unity Detector: Probably you are not using Unity now. Unloading plugin...";
+                   qWarning() << "DBus Unity Launcher API Detector: Probably you are not using Unity now or you do not have applications provide Launcher API. Unloading plugin...";
                    return false;
             }
 
