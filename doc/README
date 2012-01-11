@@ -1,8 +1,7 @@
 Ubuntu Unity Integration plugin via LauncherAPI & DBUS
 ------------------------------------------------------
 
-Плагин использует Unity LauncherAPI
-Зависит от QDBus и dbusmenu-qt
+Плагин использует Unity LauncherAPI, зависит от QtBus и dbusmenu-qt
 
 Web Site:
   http://http://code.google.com/p/vacuum-plugins/

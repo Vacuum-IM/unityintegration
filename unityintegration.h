@@ -15,19 +15,13 @@
 #include <interfaces/ifiletransfer.h>
 #include <interfaces/imainwindow.h>
 #include <interfaces/itraymanager.h>
+#include <interfaces/ixmppstreams.h>
+#include <interfaces/ioptionsmanager.h>
 #include <definitions/optionvalues.h>
+#include <utils/action.h>
 #include <utils/options.h>
 
-
-#ifdef SVNINFO
-#  include "svninfo.h"
-#else
-#  define SVN_REVISION              "0"
-#endif
-
 #define UNITYINTEGRATION_UUID  "{60e8e2d3-432a-4b89-95e7-dd8d2102b585}"
-
-class QMenu;
 
 class UnityIntegration :
                         public QObject,
@@ -49,29 +43,34 @@ public:
 
 protected:
         void showCount(int FUicount);
-        void UpdateStreamProgress(IFileStream *AStream);
         template<typename T> void sendMsg(const char *name, const T& val);
 
 
 protected slots:
         void onNotificationAdded(int ANotifyId, const INotification &ANotification);
         void onNotificationRemoved(int ANotifyId);
-        void onStreamCreated(IFileStream *AStream);
-        void onStreamDestroyed(IFileStream *AStream);
-        void onStreamProgressChanged();
         void onShutdownStarted();
 
 
 private:
         INotifications *FNotifications;
-        IFileStreamsManager  *FFileStreamsManager;
+        IFileStreamsManager *FFileStreamsManager;
         IMainWindowPlugin *FMainWindowPlugin;
         ITrayManager *FTrayManager;
-        int FShowCount;
-        double FProgressBar;
-        qint64 FPercentOld;
+        IPluginManager *FPluginManager;
+        IOptionsManager *FOptionsManager;
+        qint64 FShowCount;
         QList<QString> FNotificationAllowTypes;
         QList<int> FNotificationCount;
+        Menu *FUnityMenu;
+
+        Action *FShowRoster;
+        Action *FFilesTransferDialog;
+        Action *FChangeProfileAction;
+        Action *FShowOptionsDialogAction;
+        Action *FPluginsDialog;
+        Action *FQuitAction;
+
         QWeakPointer<DBusMenuExporter> menu_export;
         QDBusInterface *FUnityDetector;
         QDBusInterface *FThirdUnityInterfaceDetector;

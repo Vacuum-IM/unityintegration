@@ -3,7 +3,17 @@
 UnityIntegration::UnityIntegration()
 {
         FShowCount = 0;
-        FPercentOld = 0;
+}
+
+template<typename T> void UnityIntegration::sendMsg(const char *name, const T& val)
+{
+        QDBusMessage message = QDBusMessage::createSignal("/vacuum", "com.canonical.Unity.LauncherEntry", "Update");
+        QVariantList args;
+        QVariantMap map;
+        map.insert(QLatin1String(name), val);
+        args << QLatin1String("application://vacuum.desktop") << map;
+        message.setArguments(args);
+        QDBusConnection::sessionBus().send(message);
 }
 
 UnityIntegration::~UnityIntegration()
@@ -14,7 +24,7 @@ void UnityIntegration::pluginInfo(IPluginInfo *APluginInfo)
 {
         APluginInfo->name = tr("Unity Integration");
         APluginInfo->description = tr("Provides integration with Dash panel Unity");
-        APluginInfo->version = "0.1."SVN_REVISION;
+        APluginInfo->version = "0.2";
         APluginInfo->author = "Alexey Ivanov";
         APluginInfo->homePage = "http://www.vacuum-im.org";
         APluginInfo->dependences.append(NOTIFICATIONS_UUID);
@@ -22,30 +32,28 @@ void UnityIntegration::pluginInfo(IPluginInfo *APluginInfo)
         APluginInfo->dependences.append(MAINWINDOW_UUID);
 }
 
-bool UnityIntegration::initConnections(IPluginManager *APluginManager, int &/*AInitOrder*/)
+bool UnityIntegration::initConnections(IPluginManager *APluginManager, int &AInitOrder)
 {
+        //Q_UNUSED(AInitOrder);
+        AInitOrder=1000;
 
-    FUnityDetector = new QDBusInterface("com.canonical.Unity","/com/canonical/Unity/Launcher","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
-    FThirdUnityInterfaceDetector = new QDBusInterface("com.canonical.Unity","/Unity","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
+        FUnityDetector = new QDBusInterface("com.canonical.Unity","/com/canonical/Unity/Launcher","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
+        FThirdUnityInterfaceDetector = new QDBusInterface("com.canonical.Unity","/Unity","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
 
-            if((FUnityDetector->lastError().type() != QDBusError::NoError) & (FThirdUnityInterfaceDetector->lastError().type() != QDBusError::NoError))
-            {
-                   qWarning() << "DBus Unity Launcher API Detector: Probably you are not using Unity now or you do not have applications provide Launcher API. Unloading plugin...";
-                   return false;
-            }
+        if((FUnityDetector->lastError().type() != QDBusError::NoError) & (FThirdUnityInterfaceDetector->lastError().type() != QDBusError::NoError))
+        {
+                qWarning() << "DBus Unity Launcher API Detector: Probably you are not using Unity now or you do not have applications provide Launcher API. Unloading plugin...";
+                return false;
+        }
 
          qDebug() << "Vacuum IM Unity Integration started...";
 
+        FPluginManager = APluginManager;
+
         IPlugin *plugin = APluginManager->pluginInterface("IFileStreamsManager").value(0,NULL);
         if (plugin)
-            {
+
                 FFileStreamsManager = qobject_cast<IFileStreamsManager *>(plugin->instance());
-                if (FFileStreamsManager)
-                        {
-                        connect(FFileStreamsManager->instance(),SIGNAL(streamCreated(IFileStream *)),SLOT(onStreamCreated(IFileStream *)));
-                        connect(FFileStreamsManager->instance(),SIGNAL(streamDestroyed(IFileStream *)),SLOT(onStreamDestroyed(IFileStream *)));
-                        }
-            }
 
         plugin = APluginManager->pluginInterface("INotifications").value(0,NULL);
         if (plugin)
@@ -62,9 +70,13 @@ bool UnityIntegration::initConnections(IPluginManager *APluginManager, int &/*AI
                 if (plugin)
                         FMainWindowPlugin = qobject_cast<IMainWindowPlugin *>(plugin->instance());
 
-                plugin = APluginManager->pluginInterface("ITrayManager").value(0,NULL);
-                        if (plugin)
-                                FTrayManager = qobject_cast<ITrayManager *>(plugin->instance());
+        plugin = APluginManager->pluginInterface("ITrayManager").value(0,NULL);
+                if (plugin)
+                        FTrayManager = qobject_cast<ITrayManager *>(plugin->instance());
+
+        plugin = APluginManager->pluginInterface("IOptionsManager").value(0,NULL);
+                if (plugin)
+                        FOptionsManager = qobject_cast<IOptionsManager *>(plugin->instance());
 
 
         connect(APluginManager->instance(),SIGNAL(shutdownStarted()),SLOT(onShutdownStarted()));
@@ -76,7 +88,41 @@ bool UnityIntegration::initObjects()
 {
         FNotificationAllowTypes << NNT_CAPTCHA_REQUEST << NNT_CHAT_MESSAGE << NNT_NORMAL_MESSAGE << NNT_FILETRANSFER << NNT_MUC_MESSAGE_INVITE << NNT_MUC_MESSAGE_GROUPCHAT << NNT_MUC_MESSAGE_PRIVATE << NNT_MUC_MESSAGE_MENTION << NNT_SUBSCRIPTION_REQUEST << NNT_BIRTHDAY;
 
-        menu_export = new DBusMenuExporter ("/vacuum", FMainWindowPlugin->mainWindow()->mainMenu());
+        FUnityMenu = new Menu;
+        //FUnityMenu->addMenuActions(FTrayManager->contextMenu(), AG_NULL, false);
+
+        FShowRoster = new Action(this);
+        FShowRoster->setText(tr("Show roster"));
+        connect(FShowRoster,SIGNAL(triggered(bool)),FMainWindowPlugin->instance(),SLOT(onShowMainWindowByAction(bool)));
+
+        FFilesTransferDialog = new Action(this);
+        FFilesTransferDialog->setText(tr("File Transfers"));
+        connect(FFilesTransferDialog,SIGNAL(triggered(bool)),FFileStreamsManager->instance(),SLOT(onShowFileStreamsWindow(bool)));
+
+        FPluginsDialog = new Action(this);
+        FPluginsDialog->setText(tr("Setup plugins"));
+        connect(FPluginsDialog,SIGNAL(triggered(bool)),FPluginManager->instance(),SLOT(onShowSetupPluginsDialog(bool)));
+
+        FChangeProfileAction = new Action(this);
+        FChangeProfileAction->setText(tr("Change Profile"));
+        connect(FChangeProfileAction,SIGNAL(triggered(bool)),FOptionsManager->instance(),SLOT(onChangeProfileByAction(bool)));
+
+        FShowOptionsDialogAction = new Action(this);
+        FShowOptionsDialogAction->setText(tr("Options"));
+        connect(FShowOptionsDialogAction,SIGNAL(triggered(bool)),FOptionsManager->instance(),SLOT(onShowOptionsDialogByAction(bool)));
+
+        FQuitAction = new Action(this);
+        FQuitAction->setText(tr("Quit"));
+        connect(FQuitAction,SIGNAL(triggered(bool)), FPluginManager->instance(),SLOT(quit()));
+
+        FUnityMenu->addAction(FShowRoster,5049,false);
+        FUnityMenu->addAction(FFilesTransferDialog,5500,false);
+        FUnityMenu->addAction(FShowOptionsDialogAction,5500,false);
+        FUnityMenu->addAction(FChangeProfileAction,5500,false);
+        FUnityMenu->addAction(FPluginsDialog,5501,false);
+        FUnityMenu->addAction(FQuitAction,5501,false);
+
+        menu_export = new DBusMenuExporter ("/vacuum", FUnityMenu);
         sendMsg("quicklist", "/vacuum");
 
         return true;
@@ -87,105 +133,43 @@ bool UnityIntegration::initSettings()
         return true;
 }
 
-template<typename T> void UnityIntegration::sendMsg(const char *name, const T& val)
-{
-        QDBusMessage message = QDBusMessage::createSignal("/vacuum", "com.canonical.Unity.LauncherEntry", "Update");
-        QVariantList args;
-        QVariantMap map;
-        map.insert(QLatin1String(name), val);
-        args << QLatin1String("application://vacuum.desktop") << map;
-        message.setArguments(args);
-        QDBusConnection::sessionBus().send(message);
-}
-
 
 void UnityIntegration::showCount(int FShowCount)
 {
-
-    if (FShowCount != 0)
-        {
-            sendMsg("count", qint64(FShowCount));
-            sendMsg("count-visible", true);
-            //sendMsg("quicklist", "");
-        }
-    else
-        sendMsg("count-visible", false);
+        sendMsg("count", static_cast<qint64>(FShowCount));
+        sendMsg("count-visible", FShowCount != 0);
 }
 
 
 
 void UnityIntegration::onNotificationAdded(int ANotifyId, const INotification &ANotification)
 {
-    //INotification notify = FNotifications->notificationById(ANotifyId);
 
-    if (FNotificationAllowTypes.contains(ANotification.typeId))
-    {
-        FNotificationCount.append(ANotifyId);
-        FShowCount = FNotificationCount.count();
-        showCount(FShowCount);
-    }
+        if (FNotificationAllowTypes.contains(ANotification.typeId))
+        {
+                FNotificationCount.append(ANotifyId);
+                FShowCount = FNotificationCount.count();
+                showCount(FShowCount);
+        }
 }
 
 void UnityIntegration::onNotificationRemoved(int ANotifyId)
 {
-    if (FNotificationCount.contains(ANotifyId))
-    {
-        FNotificationCount.removeAll(ANotifyId);
-        FShowCount = FNotificationCount.count();
-        showCount(FShowCount);
-    }
+        if (FNotificationCount.contains(ANotifyId))
+        {
+                FNotificationCount.removeAll(ANotifyId);
+                FShowCount = FNotificationCount.count();
+                showCount(FShowCount);
+        }
 }
 
-
-void UnityIntegration::onStreamCreated(IFileStream *AStream)
-{
-    connect(AStream->instance(), SIGNAL(progressChanged()),SLOT(onStreamProgressChanged()));
-
-    UpdateStreamProgress(AStream);
-}
-
-void UnityIntegration::onStreamDestroyed(IFileStream *AStream)
-{
-
-}
-
-void UnityIntegration::onStreamProgressChanged()
-{
-        IFileStream *stream = qobject_cast<IFileStream *>(sender());
-
-        if (stream)
-                UpdateStreamProgress(stream);
-}
-
-void UnityIntegration::UpdateStreamProgress(IFileStream *AStream)
-{
-
-            qint64 minPos = AStream->rangeOffset();
-            qint64 maxPos = AStream->rangeLength()>0 ? AStream->rangeLength()+AStream->rangeOffset() : AStream->fileSize();
-            qint64 percent = maxPos>0.00 ? ((minPos+AStream->progress())*100)/maxPos : 0;
-
-            if ((percent - FPercentOld) >=1 )
-            {
-                if ((percent != 0) && (percent != 100))
-                       {
-                                sendMsg("progress", static_cast<double>(percent)/100.0);
-                                sendMsg("progress-visible", true);
-                       }
-                        else
-                              {sendMsg("progress-visible", false);}
-
-            FPercentOld = percent;
-            }
-}
 
 void UnityIntegration::onShutdownStarted()
 {
-    qDebug() << "Vacuum IM Unity Integration shutdown...";
-    sendMsg("count-visible", false);
-    sendMsg("progress-visible", false);
-    sendMsg("quicklist", "/vacuum-menu-remove");
-
-
+        qDebug() << "Vacuum IM Unity Integration shutdown...";
+        sendMsg("count-visible", false);
+        sendMsg("progress-visible", false);
+        sendMsg("quicklist", "/vacuum-menu-remove"); // that the dirty hack?
 
 }
 

@@ -1,5 +1,3 @@
-Сборка выполняется стандартно:
-
 qmake:
 
 qmake INSTALL_PREFIX=/usr unityintegration.pro
