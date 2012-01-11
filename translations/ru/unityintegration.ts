@@ -21,7 +21,7 @@
     </message>
     <message>
         <source>Setup plugins</source>
-        <translation>Настройки плагинов</translation>
+        <translation>Настроить плагины</translation>
     </message>
     <message>
         <source>Change Profile</source>
