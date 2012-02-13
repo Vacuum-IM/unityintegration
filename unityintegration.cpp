@@ -74,6 +74,10 @@ bool UnityIntegration::initConnections(IPluginManager *APluginManager, int &AIni
                 if (plugin)
                         FTrayManager = qobject_cast<ITrayManager *>(plugin->instance());
 
+        plugin = APluginManager->pluginInterface("IStatusChanger").value(0,NULL);
+                if (plugin)
+                        FStatusChanger = qobject_cast<IStatusChanger *>(plugin->instance());
+
         plugin = APluginManager->pluginInterface("IOptionsManager").value(0,NULL);
                 if (plugin)
                         FOptionsManager = qobject_cast<IOptionsManager *>(plugin->instance());
@@ -89,7 +93,6 @@ bool UnityIntegration::initObjects()
         FNotificationAllowTypes << NNT_CAPTCHA_REQUEST << NNT_CHAT_MESSAGE << NNT_NORMAL_MESSAGE << NNT_FILETRANSFER << NNT_MUC_MESSAGE_INVITE << NNT_MUC_MESSAGE_GROUPCHAT << NNT_MUC_MESSAGE_PRIVATE << NNT_MUC_MESSAGE_MENTION << NNT_SUBSCRIPTION_REQUEST << NNT_BIRTHDAY;
 
         FUnityMenu = new Menu;
-        //FUnityMenu->addMenuActions(FTrayManager->contextMenu(), AG_NULL, false);
 
         FShowRoster = new Action(this);
         FShowRoster->setText(tr("Show roster"));
@@ -115,17 +118,63 @@ bool UnityIntegration::initObjects()
         FQuitAction->setText(tr("Quit"));
         connect(FQuitAction,SIGNAL(triggered(bool)), FPluginManager->instance(),SLOT(quit()));
 
+        signalMapper = new QSignalMapper(this);
+
+        FSetStatusOnline = new Action(this);
+        FSetStatusOnline->setText(tr("Online"));
+        connect(FSetStatusOnline, SIGNAL(triggered()),signalMapper, SLOT (map()));
+
+        FSetStatusChat = new Action(this);
+        FSetStatusChat->setText(tr("Chat"));
+        connect(FSetStatusChat, SIGNAL(triggered()),signalMapper, SLOT (map()));
+
+        FSetStatusAway = new Action(this);
+        FSetStatusAway->setText(tr("Away"));
+        connect(FSetStatusAway, SIGNAL(triggered()),signalMapper, SLOT (map()));
+
+        FSetStatusDND = new Action(this);
+        FSetStatusDND->setText(tr("Do not disturb"));
+        connect(FSetStatusDND, SIGNAL(triggered()),signalMapper, SLOT (map()));
+
+        FSetStatusExAway = new Action(this);
+        FSetStatusExAway->setText(tr("Extended Away"));
+        connect(FSetStatusExAway, SIGNAL(triggered()),signalMapper, SLOT (map()));
+
+        FSetStatusInvisible = new Action(this);
+        FSetStatusInvisible->setText(tr("Invisible"));
+        connect(FSetStatusInvisible, SIGNAL(triggered()),signalMapper, SLOT (map()));
+
+
+        signalMapper->setMapping(FSetStatusOnline, int(10));
+        signalMapper->setMapping(FSetStatusChat, int(15));
+        signalMapper->setMapping(FSetStatusAway, int(20));
+        signalMapper->setMapping(FSetStatusExAway, int(25));
+        signalMapper->setMapping(FSetStatusDND, int(30));
+        signalMapper->setMapping(FSetStatusInvisible, int(35));
+        connect(signalMapper, SIGNAL(mapped(const int &)), this, SLOT(onStatusChange(const int &)));
+
+        FUnityMenu->addAction(FSetStatusOnline,5048,false);
+        FUnityMenu->addAction(FSetStatusChat,5048,false);
+        FUnityMenu->addAction(FSetStatusAway,5048,false);
+        FUnityMenu->addAction(FSetStatusDND,5048,false);
+        FUnityMenu->addAction(FSetStatusExAway,5048,false);
+        FUnityMenu->addAction(FSetStatusInvisible,5048,false);
         FUnityMenu->addAction(FShowRoster,5049,false);
         FUnityMenu->addAction(FFilesTransferDialog,5500,false);
         FUnityMenu->addAction(FShowOptionsDialogAction,5500,false);
-        FUnityMenu->addAction(FChangeProfileAction,5500,false);
-        FUnityMenu->addAction(FPluginsDialog,5501,false);
+        FUnityMenu->addAction(FPluginsDialog,5500,false);
+        FUnityMenu->addAction(FChangeProfileAction,5501,false);
         FUnityMenu->addAction(FQuitAction,5501,false);
 
         menu_export = new DBusMenuExporter ("/vacuum", FUnityMenu);
         sendMsg("quicklist", "/vacuum");
 
         return true;
+}
+
+void  UnityIntegration::onStatusChange(const int &StatusNumber)
+{
+        FStatusChanger->setMainStatus(StatusNumber);
 }
 
 bool UnityIntegration::initSettings()

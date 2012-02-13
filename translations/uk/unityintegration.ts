@@ -35,5 +35,29 @@
         <source>Quit</source>
         <translation>Вийти</translation>
     </message>
+    <message>
+        <source>Online</source>
+        <translation>В мережі</translation>
+    </message>
+    <message>
+        <source>Chat</source>
+        <translation>Готовий до спілкування</translation>
+    </message>
+    <message>
+        <source>Away</source>
+        <translation>Вийшов</translation>
+    </message>
+    <message>
+        <source>Do not disturb</source>
+        <translation>Не турбувати</translation>
+    </message>
+    <message>
+        <source>Extended Away</source>
+        <translation>Вийшов надовго</translation>
+    </message>
+    <message>
+        <source>Invisible</source>
+        <translation>Невидимий</translation>
+    </message>
 </context>
 </TS>

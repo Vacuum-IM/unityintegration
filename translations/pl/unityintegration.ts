@@ -35,5 +35,29 @@
         <source>Quit</source>
         <translation>Zakończ</translation>
     </message>
+    <message>
+        <source>Online</source>
+        <translation>W sieci</translation>
+    </message>
+    <message>
+        <source>Chat</source>
+        <translation>Chętnie porozmawiam</translation>
+    </message>
+    <message>
+        <source>Away</source>
+        <translation>Odszedłem</translation>
+    </message>
+    <message>
+        <source>Do not disturb</source>
+        <translation>Nie przeszkadzaj</translation>
+    </message>
+    <message>
+        <source>Extended Away</source>
+        <translation>Odszedłem na dłużej</translation>
+    </message>
+    <message>
+        <source>Invisible</source>
+        <translation>Niewidoczny</translation>
+    </message>
 </context>
 </TS>
