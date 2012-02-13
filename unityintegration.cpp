@@ -145,12 +145,12 @@ bool UnityIntegration::initObjects()
         connect(FSetStatusInvisible, SIGNAL(triggered()),signalMapper, SLOT (map()));
 
 
-        signalMapper->setMapping(FSetStatusOnline, int(10));
-        signalMapper->setMapping(FSetStatusChat, int(15));
-        signalMapper->setMapping(FSetStatusAway, int(20));
-        signalMapper->setMapping(FSetStatusExAway, int(25));
-        signalMapper->setMapping(FSetStatusDND, int(30));
-        signalMapper->setMapping(FSetStatusInvisible, int(35));
+        signalMapper->setMapping(FSetStatusOnline, int(STATUS_DND));
+        signalMapper->setMapping(FSetStatusChat, int(STATUS_CHAT));
+        signalMapper->setMapping(FSetStatusAway, int(STATUS_AWAY));
+        signalMapper->setMapping(FSetStatusExAway, int(STATUS_EXAWAY));
+        signalMapper->setMapping(FSetStatusDND, int(STATUS_DND));
+        signalMapper->setMapping(FSetStatusInvisible, int(STATUS_INVISIBLE));
         connect(signalMapper, SIGNAL(mapped(const int &)), this, SLOT(onStatusChange(const int &)));
 
         FUnityMenu->addAction(FSetStatusOnline,5048,false);
