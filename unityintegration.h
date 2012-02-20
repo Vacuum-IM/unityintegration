@@ -4,20 +4,18 @@
 #include <QDebug>
 #include <QVariant>
 #include <QMenu>
-#include <QSignalMapper>
 #include <dbusmenuexporter.h>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusReply>
 #include <QStandardItemModel>
+
 #include <definitions/notificationtypes.h>
 #include <interfaces/ipluginmanager.h>
 #include <interfaces/ifilestreamsmanager.h>
 #include <interfaces/inotifications.h>
-#include <interfaces/ifiletransfer.h>
+#include <interfaces/imultiuserchat.h>
 #include <interfaces/imainwindow.h>
-#include <interfaces/itraymanager.h>
 #include <interfaces/ixmppstreams.h>
-#include <interfaces/istatuschanger.h>
 #include <interfaces/ioptionsmanager.h>
 #include <definitions/optionvalues.h>
 #include <utils/action.h>
@@ -49,7 +47,6 @@ protected:
 
 
 protected slots:
-        void onStatusChange(const int &);
         void onNotificationAdded(int ANotifyId, const INotification &ANotification);
         void onNotificationRemoved(int ANotifyId);
         void onShutdownStarted();
@@ -57,26 +54,19 @@ protected slots:
 
 private:
         INotifications *FNotifications;
+        IMultiUserChatPlugin *FMultiUserChatPlugin;
         IFileStreamsManager *FFileStreamsManager;
         IMainWindowPlugin *FMainWindowPlugin;
-        ITrayManager *FTrayManager;
         IPluginManager *FPluginManager;
         IOptionsManager *FOptionsManager;
-        IStatusChanger *FStatusChanger;
+
         qint64 FShowCount;
         QList<QString> FNotificationAllowTypes;
         QList<int> FNotificationCount;
         Menu *FUnityMenu;
 
-        Action *FSetStatusOnline;
-        Action *FSetStatusChat;
-        Action *FSetStatusAway;
-        Action *FSetStatusDND;
-        Action *FSetStatusExAway;
-        Action *FSetStatusInvisible;
-        QSignalMapper *signalMapper;
-
         Action *FShowRoster;
+        Action *FShowConferences;
         Action *FFilesTransferDialog;
         Action *FChangeProfileAction;
         Action *FShowOptionsDialogAction;

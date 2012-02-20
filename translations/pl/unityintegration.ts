@@ -16,6 +16,10 @@
         <translation>Pokaż listę kontaktów</translation>
     </message>
     <message>
+        <source>Show all hidden conferences</source>
+        <translation>Pokaż wszystkie ukryte konferencje</translation>
+    </message>
+    <message>
         <source>File Transfers</source>
         <translation>Transfery plików</translation>
     </message>
@@ -34,30 +38,6 @@
     <message>
         <source>Quit</source>
         <translation>Zakończ</translation>
-    </message>
-    <message>
-        <source>Online</source>
-        <translation>W sieci</translation>
-    </message>
-    <message>
-        <source>Chat</source>
-        <translation>Chętnie porozmawiam</translation>
-    </message>
-    <message>
-        <source>Away</source>
-        <translation>Odszedłem</translation>
-    </message>
-    <message>
-        <source>Do not disturb</source>
-        <translation>Nie przeszkadzaj</translation>
-    </message>
-    <message>
-        <source>Extended Away</source>
-        <translation>Odszedłem na dłużej</translation>
-    </message>
-    <message>
-        <source>Invisible</source>
-        <translation>Niewidoczny</translation>
     </message>
 </context>
 </TS>

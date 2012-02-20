@@ -13,7 +13,11 @@
     </message>
     <message>
         <source>Show roster</source>
-        <translation>Показать ростер</translation>
+        <translation>Показать список контактов</translation>
+    </message>
+    <message>
+        <source>Show all hidden conferences</source>
+        <translation>Показать все скрытые конференции</translation>
     </message>
     <message>
         <source>File Transfers</source>
@@ -34,30 +38,6 @@
     <message>
         <source>Quit</source>
         <translation>Выйти</translation>
-    </message>
-    <message>
-        <source>Online</source>
-        <translation>Доступен</translation>
-    </message>
-    <message>
-        <source>Chat</source>
-        <translation>Готов общаться</translation>
-    </message>
-    <message>
-        <source>Away</source>
-        <translation>Ушёл</translation>
-    </message>
-    <message>
-        <source>Do not disturb</source>
-        <translation>Не беспокоить</translation>
-    </message>
-    <message>
-        <source>Extended Away</source>
-        <translation>Ушёл надолго</translation>
-    </message>
-    <message>
-        <source>Invisible</source>
-        <translation>Невидимый</translation>
     </message>
 </context>
 </TS>
