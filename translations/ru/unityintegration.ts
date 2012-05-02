@@ -37,7 +37,7 @@
     </message>
     <message>
         <source>Quit</source>
-        <translation>Выйти</translation>
+        <translation>Выход</translation>
     </message>
 </context>
 </TS>
