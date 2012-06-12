@@ -5,7 +5,7 @@ include(config.inc)
 #Project Configuration
 TEMPLATE = lib
 CONFIG += plugin
-QT = core gui dbus
+QT = core gui dbus xml
 LIBS += -l$${TARGET_UTILS}
 LIBS += -L$${VACUUM_LIB_PATH}
 DEPENDPATH += $${VACUUM_SRC_PATH}

@@ -30,7 +30,7 @@ void UnityIntegration::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("Unity Integration");
 	APluginInfo->description = tr("Provides integration with Dash panel Unity");
-	APluginInfo->version = "0.9";
+	APluginInfo->version = "0.9.1";
 	APluginInfo->author = "Alexey Ivanov";
 	APluginInfo->homePage = "http://www.vacuum-im.org";
 	APluginInfo->dependences.append(NOTIFICATIONS_UUID);
