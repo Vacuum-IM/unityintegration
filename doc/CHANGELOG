@@ -1,3 +1,7 @@
+v0.9
+-------
+Support Ubuntu 12.04, menu export fixed.
+
 v0.4
 -------
 Drop statuses from our menu. Its very buggy.

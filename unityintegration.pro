@@ -5,13 +5,13 @@ include(config.inc)
 #Project Configuration
 TEMPLATE = lib
 CONFIG += plugin
-QT = core gui dbus xml
+QT = core gui dbus
 LIBS += -l$${TARGET_UTILS}
 LIBS += -L$${VACUUM_LIB_PATH}
 DEPENDPATH += $${VACUUM_SRC_PATH}
 INCLUDEPATH += $${VACUUM_SRC_PATH}
-LIBS		    +=  -ldbusmenu-qt
-INCLUDEPATH	    +=  $$INSTALL_PREFIX/include/dbusmenu-qt
+LIBS		    += -ldbusmenu-qt
+INCLUDEPATH	    += $$INSTALL_PREFIX/include/dbusmenu-qt
 
 #Install
 include(install.inc)

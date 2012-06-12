@@ -13,24 +13,27 @@ file(GLOB SOURCES "*.cpp")
 file(GLOB HEADERS "*.h")
 file(GLOB UIS "**.ui")
 
-#set(ADD_LIBS "dbusmenu-qt")
-#include_directories("${CMAKE_INSTALL_PREFIX}/include/dbusmenu-qt/")
 
 FIND_PACKAGE(PkgConfig)
 pkg_check_modules(DBUSMENUQT dbusmenu-qt>=0.8.1)
 
-LINK_LIBRARIES (${DBUSMENUQT_LIBRARIES})
+if(NOT DBUSMENUQT_FOUND)
+  message(FATAL_ERROR "Cannot build unity integration plugin, check dependencies: dbusmenu-qt>=0.8.1")
+  return()
+endif()
+
+set(ADD_LIBS ${DBUSMENUQT_LIBRARIES})
 include_directories (${DBUSMENUQT_INCLUDE_DIRS})
 
 if (NOT (UNIX AND NOT APPLE))
-message(FATAL_ERROR "Supported only on *nix")
+  message(FATAL_ERROR "Supported only on *nix")
 endif (NOT (UNIX AND NOT APPLE)) 
 
 # By default, only QtNetwork and QtXml modules are linked, if you need other
 # modules - set corresponding variables for FindQt4 CMake module:
 # http://www.cmake.org/cmake/help/cmake-2-8-docs.html#module:FindQt4
 set(QT_USE_QTDBUS ON)
-#set(QT_USE_QTWEBKIT ON)
+set(QT_USE_QTWEBKIT OFF)
 
 # Build system assumes that *.ts files are named translations/${lang}/${pluginname}.ts
 set(LOCALIZED_LANGS "ru;pl;de;uk")
