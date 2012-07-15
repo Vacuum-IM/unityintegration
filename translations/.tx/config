@@ -1,0 +1,6 @@
+[main]
+host = http://www.transifex.net
+
+[vacuum-im.unityintegrationts]
+file_filter = <lang>/unityintegration.ts
+source_lang = ru
