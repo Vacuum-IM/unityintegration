@@ -1,13 +1,18 @@
+PREINSTALLATION REQUIREMENTS:
+
+libdbusmenu-qt-dev package
+
+INSTALLATION:
+
 qmake:
 
-qmake INSTALL_PREFIX=/usr unityintegration.pro
+qmake INSTALL_PREFIX=/usr CONFIG+=release CONFIG-=debug unityintegration.pro 
 make
 sudo make install
 
 cmake:
 
 mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release ..
 make
 sudo make install
-

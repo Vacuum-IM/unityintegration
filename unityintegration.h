@@ -4,10 +4,10 @@
 #include <QDebug>
 #include <QVariant>
 #include <QMenu>
-#include <dbusmenuexporter.h>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusReply>
-#include <QStandardItemModel>
+
+#include <dbusmenuexporter.h>
 
 #include <definitions/notificationtypes.h>
 #include <interfaces/ipluginmanager.h>
@@ -21,7 +21,7 @@
 #include <utils/action.h>
 #include <utils/options.h>
 
-#define UNITYINTEGRATION_UUID  "{60e8e2d3-432a-4b89-95e7-dd8d2102b585}"
+#define UNITYINTEGRATION_UUID "{60e8e2d3-432a-4b89-95e7-dd8d2102b585}"
 
 class UnityIntegration :
 	public QObject,
@@ -38,7 +38,7 @@ public:
 	virtual void pluginInfo(IPluginInfo *APluginInfo);
 	virtual bool initConnections(IPluginManager *APluginManager, int &AInitOrder);
 	virtual bool initObjects();
-	virtual bool initSettings();
+	virtual bool initSettings() { return true; }
 	virtual bool startPlugin() { return true; }
 
 protected:
@@ -48,6 +48,7 @@ protected:
 protected slots:
 	void onNotificationAdded(int ANotifyId, const INotification &ANotification);
 	void onNotificationRemoved(int ANotifyId);
+	void onProfileOpened(const QString &AProfile);
 	void onShutdownStarted();
 
 private:

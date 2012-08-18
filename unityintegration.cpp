@@ -30,7 +30,7 @@ void UnityIntegration::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("Unity Integration");
 	APluginInfo->description = tr("Provides integration with Dash panel Unity");
-	APluginInfo->version = "0.9.1";
+	APluginInfo->version = "1.0";
 	APluginInfo->author = "Alexey Ivanov";
 	APluginInfo->homePage = "http://www.vacuum-im.org";
 	APluginInfo->dependences.append(NOTIFICATIONS_UUID);
@@ -47,37 +47,36 @@ bool UnityIntegration::initConnections(IPluginManager *APluginManager, int &AIni
 		qWarning() << "DBus Unity Launcher API Detector: Probably you are not using Unity now or you do not have applications provide Launcher API. Unloading plugin...";
 		return false;
 	}
-	qDebug() << "Vacuum IM Unity Integration started...";
 
 	FPluginManager = APluginManager;
 	IPlugin *plugin = APluginManager->pluginInterface("IMultiUserChatPlugin").value(0,NULL);
 	if (plugin)
 		FMultiUserChatPlugin = qobject_cast<IMultiUserChatPlugin *>(plugin->instance());
-
 	plugin = APluginManager->pluginInterface("INotifications").value(0,NULL);
 	if (plugin)
 	{
 		FNotifications = qobject_cast<INotifications *>(plugin->instance());
 		if (FNotifications)
 		{
-			connect (FNotifications->instance(), SIGNAL(notificationAppended(int, const INotification)),this,SLOT(onNotificationAdded(int, const INotification)));
-			connect (FNotifications->instance(), SIGNAL(notificationRemoved(int)),this,SLOT(onNotificationRemoved(int)));
+			connect(FNotifications->instance(),SIGNAL(notificationAppended(int, const INotification)),this,SLOT(onNotificationAdded(int, const INotification)));
+			connect(FNotifications->instance(),SIGNAL(notificationRemoved(int)),this,SLOT(onNotificationRemoved(int)));
 		}
 	}
-
 	plugin = APluginManager->pluginInterface("IMainWindowPlugin").value(0,NULL);
 	if (plugin)
 		FMainWindowPlugin = qobject_cast<IMainWindowPlugin *>(plugin->instance());
-
 	plugin = APluginManager->pluginInterface("IOptionsManager").value(0,NULL);
 	if (plugin)
 		FOptionsManager = qobject_cast<IOptionsManager *>(plugin->instance());
-
+		if (FOptionsManager)
+		{
+			connect(FOptionsManager->instance(),SIGNAL(profileOpened(const QString)),this,SLOT(onProfileOpened(const QString)));
+		}
 	plugin = APluginManager->pluginInterface("IFileStreamsManager").value(0,NULL);
 	if (plugin)
 		FFileStreamsManager = qobject_cast<IFileStreamsManager *>(plugin->instance());
 
-	return FNotifications!=NULL;
+	return FNotifications!=NULL && FMultiUserChatPlugin!=NULL;
 }
 
 bool UnityIntegration::initObjects()
@@ -85,7 +84,6 @@ bool UnityIntegration::initObjects()
 	FNotificationAllowTypes << NNT_CAPTCHA_REQUEST << NNT_CHAT_MESSAGE << NNT_NORMAL_MESSAGE << NNT_FILETRANSFER << NNT_MUC_MESSAGE_INVITE << NNT_MUC_MESSAGE_GROUPCHAT << NNT_MUC_MESSAGE_PRIVATE << NNT_MUC_MESSAGE_MENTION << NNT_SUBSCRIPTION_REQUEST;
 
 	FUnityMenu = new Menu;
-
 	if(FMainWindowPlugin)
 	{
 		FActionRoster = new Action(this);
@@ -93,7 +91,6 @@ bool UnityIntegration::initObjects()
 		connect(FActionRoster,SIGNAL(triggered(bool)),FMainWindowPlugin->instance(),SLOT(onShowMainWindowByAction(bool)));
 		FUnityMenu->addAction(FActionRoster,10,false);
 	}
-
 	if(FMultiUserChatPlugin)
 	{
 		FActionConferences = new Action(this);
@@ -101,7 +98,6 @@ bool UnityIntegration::initObjects()
 		connect(FActionConferences,SIGNAL(triggered(bool)),FMultiUserChatPlugin->instance(),SLOT(onShowAllRoomsTriggered(bool)));
 		FUnityMenu->addAction(FActionConferences,10,false);
 	}
-
 	if(FFileStreamsManager)
 	{
 		FActionFilesTransferDialog = new Action(this);
@@ -109,7 +105,6 @@ bool UnityIntegration::initObjects()
 		connect(FActionFilesTransferDialog,SIGNAL(triggered(bool)),FFileStreamsManager->instance(),SLOT(onShowFileStreamsWindow(bool)));
 		FUnityMenu->addAction(FActionFilesTransferDialog,10,false);
 	}
-
 	if(FOptionsManager)
 	{
 		FActionOptionsDialog = new Action(this);
@@ -117,7 +112,6 @@ bool UnityIntegration::initObjects()
 		connect(FActionOptionsDialog,SIGNAL(triggered(bool)),FOptionsManager->instance(),SLOT(onShowOptionsDialogByAction(bool)));
 		FUnityMenu->addAction(FActionOptionsDialog,11,false);
 	}
-
 	if(FPluginManager)
 	{
 		FActionPluginsDialog = new Action(this);
@@ -125,7 +119,6 @@ bool UnityIntegration::initObjects()
 		connect(FActionPluginsDialog,SIGNAL(triggered(bool)),FPluginManager->instance(),SLOT(onShowSetupPluginsDialog(bool)));
 		FUnityMenu->addAction(FActionPluginsDialog,11,false);
 	}
-
 	if(FOptionsManager)
 	{
 		FActionChangeProfile = new Action(this);
@@ -133,7 +126,6 @@ bool UnityIntegration::initObjects()
 		connect(FActionChangeProfile,SIGNAL(triggered(bool)),FOptionsManager->instance(),SLOT(onChangeProfileByAction(bool)));
 		FUnityMenu->addAction(FActionChangeProfile,12,false);
 	}
-
 	if(FPluginManager)
 	{
 		FActionQuit = new Action(this);
@@ -141,16 +133,15 @@ bool UnityIntegration::initObjects()
 		connect(FActionQuit,SIGNAL(triggered(bool)), FPluginManager->instance(),SLOT(quit()));
 		FUnityMenu->addAction(FActionQuit,12,false);
 	}
-
-	menu_export = new DBusMenuExporter ("/vacuum", FUnityMenu);
-	sendMessage("quicklist", "/vacuum");
-
 	return true;
 }
 
-bool UnityIntegration::initSettings()
+void UnityIntegration::onProfileOpened(const QString &AProfile)
 {
-	return true;
+	Q_UNUSED(AProfile);
+	// Экспортировать меню только после открытия профиля, простая защита от случайного повторного запуска клиента
+	menu_export = new DBusMenuExporter ("/vacuum", FUnityMenu);
+	sendMessage("quicklist", "/vacuum");
 }
 
 void UnityIntegration::showCount(quint64 FCount)
@@ -184,11 +175,9 @@ void UnityIntegration::onNotificationRemoved(int ANotifyId)
 
 void UnityIntegration::onShutdownStarted()
 {
-	qDebug() << "Vacuum IM Unity Integration shutdown...";
 	sendMessage("count-visible", false);
 	sendMessage("progress-visible", false);
-	delete menu_export.data(); //? works on Unity?
-	//sendMessage("quicklist", "/vacuum-menu-remove");
+	delete menu_export.data();
 }
 
 Q_EXPORT_PLUGIN2(plg_unityintegration, UnityIntegration)

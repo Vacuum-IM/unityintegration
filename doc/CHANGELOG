@@ -1,3 +1,7 @@
+v1.0
+-------
+Menu exported only if profile opened, simply fix for bug with launcherAPI by second vacuum instance.
+
 v0.9
 -------
 Support Ubuntu 12.04, menu export fixed.
