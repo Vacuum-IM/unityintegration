@@ -1,7 +1,6 @@
 #ifndef UnityIntegration_H
 #define UnityIntegration_H
 
-#include <QDebug>
 #include <QVariant>
 #include <QMenu>
 #include <QtDBus/QDBusInterface>
@@ -42,8 +41,9 @@ public:
 	virtual bool startPlugin() { return true; }
 
 protected:
-	void showCount(quint64 FCount);
+	void showCount(qint64 FCount);
 	template<typename T> void sendMessage(const char *name, const T& val);
+	void sendMessage(const QVariantMap &properties);
 
 protected slots:
 	void onNotificationAdded(int ANotifyId, const INotification &ANotification);
@@ -59,7 +59,7 @@ private:
 	IOptionsManager *FOptionsManager;
 	IPluginManager *FPluginManager;
 
-	quint64 FCount;
+	qint64 FCount;
 	QList<QString> FNotificationAllowTypes;
 	QList<int> FNotificationCount;
 	Menu *FUnityMenu;
