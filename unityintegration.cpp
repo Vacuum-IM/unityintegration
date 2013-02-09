@@ -1,4 +1,5 @@
 #include "unityintegration.h"
+#include <QDebug>
 
 UnityIntegration::UnityIntegration()
 {
@@ -13,13 +14,19 @@ UnityIntegration::UnityIntegration()
 
 template<typename T> void UnityIntegration::sendMessage(const char *name, const T& val)
 {
-	QDBusMessage message = QDBusMessage::createSignal("/vacuum", "com.canonical.Unity.LauncherEntry", "Update");
-	QVariantList args;
 	QVariantMap map;
 	map.insert(QLatin1String(name), val);
+	sendMessage(map);
+}
+
+void UnityIntegration::sendMessage(const QVariantMap &map)
+{
+	QDBusMessage message = QDBusMessage::createSignal("/vacuum", "com.canonical.Unity.LauncherEntry", "Update");
+	QVariantList args;
 	args << QLatin1String("application://vacuum.desktop") << map;
 	message.setArguments(args);
-	QDBusConnection::sessionBus().send(message);
+	if (!QDBusConnection::sessionBus().send(message))
+		qDebug() << "Unable to send message";
 }
 
 UnityIntegration::~UnityIntegration()
@@ -30,7 +37,7 @@ void UnityIntegration::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("Unity Integration");
 	APluginInfo->description = tr("Provides integration with Dash panel Unity");
-	APluginInfo->version = "1.0";
+	APluginInfo->version = "1.1";
 	APluginInfo->author = "Alexey Ivanov";
 	APluginInfo->homePage = "http://www.vacuum-im.org";
 	APluginInfo->dependences.append(NOTIFICATIONS_UUID);
@@ -144,12 +151,14 @@ void UnityIntegration::onProfileOpened(const QString &AProfile)
 	sendMessage("quicklist", "/vacuum");
 }
 
-void UnityIntegration::showCount(quint64 FCount)
+void UnityIntegration::showCount(qint64 FCount)
 {
 	if (FCount <= 99)
 	{
-		sendMessage("count", FCount);
-		sendMessage("count-visible", FCount != 0);
+		QVariantMap map;
+		map.insert(QLatin1String("count"), FCount);
+		map.insert(QLatin1String("count-visible"), FCount > 0);
+		sendMessage(map);
 	}
 }
 
