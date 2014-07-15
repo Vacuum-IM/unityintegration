@@ -23,7 +23,27 @@ set(QT_USE_QTDBUS ON)
 set(QT_USE_QTWEBKIT OFF)
 
 set(ADD_LIBS ${DBUSMENUQT_LIBRARIES})
-include_directories (${DBUSMENUQT_INCLUDE_DIRS})
+include_directories("${DBUSMENUQT_INCLUDE_DIRS}")
+
+pkg_check_modules(MESSAGINGMENU messaging-menu)
+
+set(MESSAGING_MENU OFF CACHE BOOL "Unity Messaging Menu API support. Only Ubuntu 14.04 and newer.")
+
+if(${MESSAGING_MENU} AND MESSAGINGMENU_FOUND)
+	message(STATUS "Building with Unity Messaging Menu API support")
+	set(SOURCES ${SOURCES} thirdparty/messaging-menu-qt/messaging-menu-qt.cpp)
+	set(HEADERS ${HEADERS} thirdparty/messaging-menu-qt/messaging-menu-qt.hpp)
+	set(MOC_HEADERS ${MOC_HEADERS} thirdparty/messaging-menu-qt/messaging-menu-qt.hpp)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+	set(ADD_LIBS ${ADD_LIBS} ${MESSAGINGMENU_LIBRARIES})
+	include_directories("${MESSAGINGMENU_INCLUDE_DIRS}")
+elseif(${MESSAING_MENU})
+	message(FATAL_ERROR "Building without unity Messaging Menu API support. Check messaging-menu library dependency.")
+	return()
+else()
+	message(STATUS "Building without unity Messaging Menu API support. Enable: -DMESSAGING_MENU=ON")
+endif()
+
 include_directories("${CMAKE_SOURCE_DIR}")
 
 include("${CMAKE_SOURCE_DIR}/cmake/config.cmake")

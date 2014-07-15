@@ -1,6 +1,12 @@
 include(qmake/debug.inc)
 include(qmake/config.inc)
 
+contains(DEFINES, MESSAGING_MENU): {
+  CONFIG             += link_pkgconfig
+  PKGCONFIG          += messaging-menu
+  QMAKE_CXXFLAGS     += -std=c++0x
+}
+
 #Project configuration
 TARGET              = unityintegration
 QT                  = core gui dbus xml

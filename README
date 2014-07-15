@@ -23,16 +23,18 @@ BUILD AND INSTALL
 =================
   Requirements
   ------------
-  Development headers for libdbusmenu-qt package
+  Packages: libdbusmenu-qt-dev, libmessaging-menu-dev
 
-  Configure
-  ---------
-  You should use the same settings, as at vacuum build
-  VACUUM_SDK_PATH - full path to vacuum SDK (for defaults look into qmake/config.inc or cmake/config.cmake)
+  Configure and build via cmake
+  -----------
+  mkdir build && cd build
+  cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DMESSAGING_MENU=ON
+  make
+  sudo make install
 
-  Unix example
+  Configure and build via qmake
   ------------
-  qmake VACUUM_SDK_PATH="/usr/include/vacuum" CONFIG-=debug CONFIG-=debug_and_install
+  qmake INSTALL_PATH=/usr CONFIG-=debug CONFIG-=debug_and_install DEFINES+=MESSAGING_MENU
   make
   sudo make install
 
@@ -40,6 +42,10 @@ BUILD AND INSTALL
 CHANGELOG
 =========
   LEGEND: [+]-New feature [*]-Enhancement [-]-Bug fix
+
+  v1.2
+  -------
+  [+] Added Ubuntu Messaging Menu support.
 
   v1.1
   -------

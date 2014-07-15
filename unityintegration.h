@@ -1,14 +1,20 @@
-#ifndef UnityIntegration_H
-#define UnityIntegration_H
+#ifndef UNITYINTEGRATION_H
+#define UNITYINTEGRATION_H
 
 #include <QVariant>
 #include <QMenu>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusReply>
 
-#include <dbusmenuexporter.h>
+#include <dbusmenu-qt/dbusmenuexporter.h>
 
+#ifdef MESSAGING_MENU
+#include <thirdparty/messaging-menu-qt/messaging-menu-qt.hpp>
+#endif
+
+#include <definitions/notificationdataroles.h>
 #include <definitions/notificationtypes.h>
+#include <interfaces/iavatars.h>
 #include <interfaces/ipluginmanager.h>
 #include <interfaces/ifilestreamsmanager.h>
 #include <interfaces/inotifications.h>
@@ -41,7 +47,7 @@ public:
 	virtual bool startPlugin() { return true; }
 
 protected:
-	void showCount(qint64 FCount);
+	void updateCount(qint64 FLauncherCount);
 	template<typename T> void sendMessage(const char *name, const T& val);
 	void sendMessage(const QVariantMap &properties);
 
@@ -49,6 +55,9 @@ protected slots:
 	void onNotificationAdded(int ANotifyId, const INotification &ANotification);
 	void onNotificationRemoved(int ANotifyId);
 	void onProfileOpened(const QString &AProfile);
+#ifdef MESSAGING_MENU
+	void onSourceActivated(MessagingMenu::Application::Source &ASource);
+#endif
 	void onShutdownStarted();
 
 private:
@@ -58,23 +67,35 @@ private:
 	INotifications *FNotifications;
 	IOptionsManager *FOptionsManager;
 	IPluginManager *FPluginManager;
+	IAvatars *FAvatars;
 
-	qint64 FCount;
 	QList<QString> FNotificationAllowTypes;
-	QList<int> FNotificationCount;
-	Menu *FUnityMenu;
+	QList<int> FNotificationsCount;
+	qint64 FLauncherCount;
+	Menu *FLauncherMenu;
 
 	Action *FActionChangeProfile;
 	Action *FActionFilesTransferDialog;
 	Action *FActionPluginsDialog;
 	Action *FActionQuit;
-	Action *FActionConferences;
 	Action *FActionOptionsDialog;
 	Action *FActionRoster;
 
 	QWeakPointer<DBusMenuExporter> menu_export;
-	QDBusInterface *FUnityDetector;
-	QDBusInterface *FThirdUnityInterfaceDetector;
+	QDBusInterface *FUnityInterface;
+	QDBusInterface *FThirdUnityInterface;
+
+
+#ifdef MESSAGING_MENU
+	QList<QString> FMessagingMenuAllowTypes;
+	MessagingMenu::Application *FMessagingMenu;
+
+	QHash<QString, MessagingMenu::Application::Source*> FMessagingItems;
+	QHash<QString, QList<int> > FNotifyIds;
+	QHash<int, QString> FNotifyType;
+	QHash<int, QString> FNotifyJid;
+#endif
+
 };
 
 #endif // UNITYINTEGRATION_H
