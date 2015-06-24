@@ -23,78 +23,78 @@
 #include <QIcon>
 namespace MessagingMenu
 {
-    typedef enum
-    {
-        Available,
-        Away,
-        Busy,
-        Invisible,
-        Offline
-    } Status;
+	typedef enum
+	{
+		Available,
+		Away,
+		Busy,
+		Invisible,
+		Offline
+	} Status;
 
-    class ApplicationPrivate;
-    class Application : public QObject
-    {
-        Q_OBJECT
-        Q_DECLARE_PRIVATE(MessagingMenu::Application)
-        private:
-            ApplicationPrivate* d_ptr;
-        public:
-            class SourcePrivate;
-            class Source
-            {
-                Q_DECLARE_PRIVATE(MessagingMenu::Application::Source)
-                friend class Application;
-                friend class ApplicationPrivate;
-                private:
-                    Source() = delete;
-                    Source(const Source&) = delete;
-                    Source& operator=(const Source&) = delete;
+	class ApplicationPrivate;
+	class Application : public QObject
+	{
+		Q_OBJECT
+		Q_DECLARE_PRIVATE(MessagingMenu::Application)
+		private:
+			ApplicationPrivate* d_ptr;
+		public:
+			class SourcePrivate;
+			class Source
+			{
+				Q_DECLARE_PRIVATE(MessagingMenu::Application::Source)
+				friend class Application;
+				friend class ApplicationPrivate;
+				private:
+					Source() = delete;
+					Source(const Source&) = delete;
+					Source& operator=(const Source&) = delete;
 					Source(Application *application, const QString &id, const QString &label, const QString &icon = QString());
-                public:
-                    bool hasCount() const;
-                    bool hasTime() const;
-                    bool hasStr() const;
+				public:
+					bool hasCount() const;
+					bool hasTime() const;
+					bool hasStr() const;
 
-                    quint32 getCount() const;
-                    QDateTime getTime() const;
-                    const QString& getString() const;
-                    const QString& getLabel() const;
+					quint32 getCount() const;
+					QDateTime getTime() const;
+					const QString& getString() const;
+					const QString& getLabel() const;
 					const QString& getIcon() const;
 
-                    void setCount(quint32 count);
-                    void setTime(const QDateTime &time);
-                    void setString(const QString &str);
-                    void setLabel(const QString &label);
+					void setCount(quint32 count);
+					void setTime(const QDateTime &time);
+					void setString(const QString &str);
+					void setLabel(const QString &label);
 					void setIcon(const QString &icon);
-                    void setAttention(bool draw = true);
-                    bool isPersistent() const;
-                    void setPersistent(bool persistent = true);
-                private:
-                    void sendAll();
-                    void setPosition(qint32 position);
-                    qint32 getPosition () const;
+					void setAttention(bool draw = true);
+					bool isPersistent() const;
+					void setPersistent(bool persistent = true);
+				private:
+					void sendAll();
+					void setPosition(qint32 position);
+					qint32 getPosition () const;
 					const QString& getId() const;
-                private:
-                    SourcePrivate *d_ptr;
-            };
+				private:
+					SourcePrivate *d_ptr;
+			};
 
-            Application(const QString &desktopId, QObject *parent = NULL);
-            virtual ~Application();
+			Application(const QString &desktopId, QObject *parent = NULL);
+			virtual ~Application();
 
 			Source& createSourceTime(const QString &id, const QString &label, const QString &icon = QString(), const QDateTime &time = QDateTime::currentDateTime(), bool persistent = false, qint32 position = -1);
 			Source& createSourceCount(const QString &id, const QString &label, const QString &icon = QString(), quint32 count = 0, bool persistent = false, qint32 position = -1);
 			Source& createSourceString(const QString &id, const QString &label, const QString &icon = QString(), const QString& str = QString(), bool persistent = false, qint32 position = -1);
-            void registerApp();
-            void unregisterApp();
-            void setStatus(Status status);
-            void removeSource(Source& source);
-            bool hasSource(const Source& source);
+			void registerApp();
+			void unregisterApp();
+			void setStatus(Status status);
+			void removeSource(Source& source);
+			bool hasSource(const Source& source);
 			bool hasSourceById(const QString& id);
-        Q_SIGNALS:
-            void sourceActivated(MessagingMenu::Application::Source&);
-            void statusChanged(MessagingMenu::Status);
-    };
+		Q_SIGNALS:
+			void sourceActivated(MessagingMenu::Application::Source&);
+			void statusChanged(MessagingMenu::Status);
+	};
 }
 
 #endif /* end of include guard: MESSAGING_MENU_30GOW558 */

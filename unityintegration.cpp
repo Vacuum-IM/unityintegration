@@ -1,15 +1,16 @@
 #include "unityintegration.h"
-#include <QDebug>
+#include <utils/logger.h>
 
 UnityIntegration::UnityIntegration()
 {
 	FLauncherCount = 0;
 	FFileStreamsManager = NULL;
 	FMainWindowPlugin = NULL;
-	FMultiUserChatPlugin = NULL;
+	FMultiUserChatManager = NULL;
 	FNotifications = NULL;
 	FOptionsManager = NULL;
 	FPluginManager = NULL;
+	FStatusChanger = NULL;
 	FAvatars = NULL;
 }
 
@@ -27,7 +28,7 @@ void UnityIntegration::sendMessage(const QVariantMap &map)
 	args << QLatin1String("application://vacuum.desktop") << map;
 	message.setArguments(args);
 	if (!QDBusConnection::sessionBus().send(message))
-		qDebug() << "Unable to send message";
+		LOG_WARNING(QString("Unable to send message"));
 }
 
 UnityIntegration::~UnityIntegration()
@@ -37,32 +38,34 @@ UnityIntegration::~UnityIntegration()
 void UnityIntegration::pluginInfo(IPluginInfo *APluginInfo)
 {
 	APluginInfo->name = tr("Unity Integration");
-	APluginInfo->description = tr("Provides integration with Dash panel Unity");
-	APluginInfo->version = "1.2";
+	APluginInfo->description = tr("Provides integration with Unity");
+	APluginInfo->version = "1.3";
 	APluginInfo->author = "Alexey Ivanov";
-	APluginInfo->homePage = "http://www.vacuum-im.org";
+	APluginInfo->homePage = "https://github.com/Vacuum-IM/unityintegration";
+	APluginInfo->dependences.append(AVATARTS_UUID);
 	APluginInfo->dependences.append(NOTIFICATIONS_UUID);
+	APluginInfo->dependences.append(STATUSCHANGER_UUID);
 }
 
 bool UnityIntegration::initConnections(IPluginManager *APluginManager, int &AInitOrder)
 {
-	AInitOrder=1000;
-	FUnityInterface = new QDBusInterface("com.canonical.Unity","/com/canonical/Unity/Launcher","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
-	FThirdUnityInterface = new QDBusInterface("com.canonical.Unity","/Unity","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
+	AInitOrder=100;
 
-	if((FUnityInterface->lastError().type() != QDBusError::NoError) & (FThirdUnityInterface->lastError().type() != QDBusError::NoError))
+	FUnityInterface = new QDBusInterface("com.canonical.Unity","/com/canonical/Unity/Launcher","org.freedesktop.DBus.Properties",QDBusConnection::sessionBus());
+
+	if(FUnityInterface->lastError().type() != QDBusError::NoError)
 	{
-		qWarning() << "DBus Unity Launcher API Detector: Probably you are not using Unity now or you do not have applications provide Launcher API. Unloading plugin...";
+		LOG_WARNING(QString("Plugin cannot work properly, your DE probably not Ubuntu Unity."));
 		return false;
 	}
 
 	FPluginManager = APluginManager;
-
 	connect(FPluginManager->instance(),SIGNAL(shutdownStarted()),this,SLOT(onShutdownStarted()));
 
 	IPlugin *plugin = APluginManager->pluginInterface("IMultiUserChatPlugin").value(0,NULL);
 	if (plugin)
-		FMultiUserChatPlugin = qobject_cast<IMultiUserChatPlugin *>(plugin->instance());
+		FMultiUserChatManager = qobject_cast<IMultiUserChatManager *>(plugin->instance());
+
 	plugin = APluginManager->pluginInterface("INotifications").value(0,NULL);
 	if (plugin)
 	{
@@ -73,32 +76,48 @@ bool UnityIntegration::initConnections(IPluginManager *APluginManager, int &AIni
 			connect(FNotifications->instance(),SIGNAL(notificationRemoved(int)),this,SLOT(onNotificationRemoved(int)));
 		}
 	}
+
 	plugin = APluginManager->pluginInterface("IMainWindowPlugin").value(0,NULL);
 	if (plugin)
 		FMainWindowPlugin = qobject_cast<IMainWindowPlugin *>(plugin->instance());
+
 	plugin = APluginManager->pluginInterface("IOptionsManager").value(0,NULL);
 	if (plugin)
 		FOptionsManager = qobject_cast<IOptionsManager *>(plugin->instance());
 		if (FOptionsManager)
-		{
 			connect(FOptionsManager->instance(),SIGNAL(profileOpened(const QString)),this,SLOT(onProfileOpened(const QString)));
-		}
+
 	plugin = APluginManager->pluginInterface("IFileStreamsManager").value(0,NULL);
 	if (plugin)
 		FFileStreamsManager = qobject_cast<IFileStreamsManager *>(plugin->instance());
+
 	plugin = APluginManager->pluginInterface("IAvatars").value(0,NULL);
 	if (plugin)
 		FAvatars = qobject_cast<IAvatars *>(plugin->instance());
 
-	return FNotifications!=NULL && FMultiUserChatPlugin!=NULL;
+	plugin = APluginManager->pluginInterface("IStatusChanger").value(0,NULL);
+	if (plugin)
+		FStatusChanger = qobject_cast<IStatusChanger *>(plugin->instance());
+
+	return FNotifications!=NULL && FAvatars!=NULL && FStatusChanger!=NULL;
 }
 
 bool UnityIntegration::initObjects()
 {
-	FNotificationAllowTypes << NNT_CAPTCHA_REQUEST << NNT_CHAT_MESSAGE << NNT_NORMAL_MESSAGE << NNT_FILETRANSFER << NNT_MUC_MESSAGE_INVITE << NNT_MUC_MESSAGE_GROUPCHAT << NNT_MUC_MESSAGE_PRIVATE << NNT_MUC_MESSAGE_MENTION << NNT_SUBSCRIPTION_REQUEST;
+	FNotificationAllowTypes <<  NNT_CHAT_MESSAGE << NNT_NORMAL_MESSAGE << NNT_MUC_MESSAGE_GROUPCHAT << NNT_MUC_MESSAGE_PRIVATE << NNT_MUC_MESSAGE_MENTION;
+
 #ifdef MESSAGING_MENU
-	FMessagingMenuAllowTypes << NNT_CHAT_MESSAGE << NNT_NORMAL_MESSAGE << NNT_MUC_MESSAGE_GROUPCHAT << NNT_MUC_MESSAGE_PRIVATE;
+	FMessagingMenu = new MessagingMenu::Application("vacuum.desktop");	connect(FMessagingMenu,SIGNAL(sourceActivated(MessagingMenu::Application::Source&)),this,SLOT(onSourceActivated(MessagingMenu::Application::Source&)));
+	connect(FMessagingMenu,SIGNAL(statusChanged(MessagingMenu::Status)),this,SLOT(onStatusChanged(MessagingMenu::Status)));
+	FMessagingMenu->registerApp();
 #endif
+
+	return true;
+}
+
+void UnityIntegration::onProfileOpened(const QString &AProfile)
+{
+	Q_UNUSED(AProfile);
 
 	FLauncherMenu = new Menu;
 	if(FMainWindowPlugin)
@@ -120,42 +139,23 @@ bool UnityIntegration::initObjects()
 		FActionOptionsDialog = new Action(this);
 		FActionOptionsDialog->setText(tr("Options"));
 		connect(FActionOptionsDialog,SIGNAL(triggered(bool)),FOptionsManager->instance(),SLOT(onShowOptionsDialogByAction(bool)));
-		FLauncherMenu->addAction(FActionOptionsDialog,11,false);
+		FLauncherMenu->addAction(FActionOptionsDialog,20,false);
 	}
 	if(FPluginManager)
 	{
 		FActionPluginsDialog = new Action(this);
 		FActionPluginsDialog->setText(tr("Setup plugins"));
 		connect(FActionPluginsDialog,SIGNAL(triggered(bool)),FPluginManager->instance(),SLOT(onShowSetupPluginsDialog(bool)));
-		FLauncherMenu->addAction(FActionPluginsDialog,11,false);
+		FLauncherMenu->addAction(FActionPluginsDialog,20,false);
 	}
 	if(FOptionsManager)
 	{
 		FActionChangeProfile = new Action(this);
 		FActionChangeProfile->setText(tr("Change Profile"));
 		connect(FActionChangeProfile,SIGNAL(triggered(bool)),FOptionsManager->instance(),SLOT(onChangeProfileByAction(bool)));
-		FLauncherMenu->addAction(FActionChangeProfile,12,false);
-	}
-	if(FPluginManager)
-	{
-		FActionQuit = new Action(this);
-		FActionQuit->setText(tr("Quit"));
-		connect(FActionQuit,SIGNAL(triggered(bool)), FPluginManager->instance(),SLOT(quit()));
-		FLauncherMenu->addAction(FActionQuit,12,false);
+		FLauncherMenu->addAction(FActionChangeProfile,20,false);
 	}
 
-#ifdef MESSAGING_MENU
-	FMessagingMenu = new MessagingMenu::Application("vacuum.desktop");
-	connect(FMessagingMenu,SIGNAL(sourceActivated(MessagingMenu::Application::Source&)),this,SLOT(onSourceActivated(MessagingMenu::Application::Source&)));
-	FMessagingMenu->registerApp();
-#endif
-
-	return true;
-}
-
-void UnityIntegration::onProfileOpened(const QString &AProfile)
-{
-	Q_UNUSED(AProfile);
 	menu_export = new DBusMenuExporter ("/vacuum", FLauncherMenu);
 	sendMessage("quicklist", "/vacuum");
 }
@@ -181,25 +181,26 @@ void UnityIntegration::onNotificationAdded(int ANotifyId, const INotification &A
 	}
 
 #ifdef MESSAGING_MENU
-	if (FMessagingMenuAllowTypes.contains(ANotification.typeId))
+	if (FNotificationAllowTypes.contains(ANotification.typeId))
 	{
-		//Jid streamJid = ANotification.data.value(NDR_STREAM_JID).toString();
 		Jid contactJid = ANotification.data.value(NDR_CONTACT_JID).toString();
+		QString menuEntryId = ANotification.typeId + "|" + contactJid.pFull();
 
-		if(!FMessagingMenu->hasSourceById(contactJid.pFull()))
+		if(!FMessagingMenu->hasSourceById(menuEntryId))
 		{
-			MessagingMenu::Application::Source *source = &FMessagingMenu->createSourceTime(contactJid.pFull(), ANotification.data.value(NDR_POPUP_TITLE).toString(),
+			MessagingMenu::Application::Source *source = &FMessagingMenu->createSourceTime(menuEntryId, ANotification.data.value(NDR_POPUP_TITLE).toString(),
 																						   FAvatars->avatarFileName(FAvatars->avatarHash(contactJid)), QDateTime::currentDateTime(), true);
 			source->setAttention(true);
-			FMessagingItems.insert(contactJid.pFull(), source);
+			source->setCount(0);
+			FMessagingItems.insert(menuEntryId, source);
 		}
 
-		FNotifyIds[contactJid.pFull()].append(ANotifyId);
+		FNotifyIds[menuEntryId].append(ANotifyId);
 		FNotifyType.insert(ANotifyId, ANotification.typeId);
 		FNotifyJid.insert(ANotifyId, contactJid.pFull());
 
-		if (FNotifyIds.value(contactJid.pFull()).count() > 1)
-			FMessagingItems.value(contactJid.pFull())->setCount(FNotifyIds.value(contactJid.pFull()).count());
+		if (FNotifyIds.value(menuEntryId).count() > 1)
+			FMessagingItems.value(menuEntryId)->setCount(FNotifyIds.value(menuEntryId).count());
 	}
 #endif
 }
@@ -214,22 +215,23 @@ void UnityIntegration::onNotificationRemoved(int ANotifyId)
 	}
 
 #ifdef MESSAGING_MENU
-	if (FMessagingMenuAllowTypes.contains(FNotifyType.value(ANotifyId)))
+	if (FNotificationAllowTypes.contains(FNotifyType.value(ANotifyId)))
 	{
 		QString contactJid = FNotifyJid.value(ANotifyId);
+		QString menuEntryId = FNotifyType.value(ANotifyId) + "|" + contactJid;
 
-		FNotifyIds[contactJid].removeAll(ANotifyId);
+		FNotifyIds[menuEntryId].removeAll(ANotifyId);
 		FNotifyType.remove(ANotifyId);
 		FNotifyJid.remove(ANotifyId);
 
-		if (FNotifyIds.value(contactJid).count() > 0 && FMessagingMenu->hasSourceById(contactJid))
+		if (FNotifyIds.value(menuEntryId).count() > 0 && FMessagingMenu->hasSourceById(menuEntryId))
 		{
-			FMessagingItems.value(contactJid)->setCount(FNotifyIds.value(contactJid).count());
+			FMessagingItems.value(menuEntryId)->setCount(FNotifyIds.value(menuEntryId).count());
 		}
-		else if (FMessagingMenu->hasSourceById(contactJid))
+		else if (FMessagingMenu->hasSourceById(menuEntryId))
 		{
-			FMessagingMenu->removeSource(*FMessagingItems.value(contactJid));
-			FMessagingItems.remove(contactJid);
+			FMessagingMenu->removeSource(*FMessagingItems.value(menuEntryId));
+			FMessagingItems.remove(menuEntryId);
 		}
 	}
 #endif
@@ -240,13 +242,40 @@ void UnityIntegration::onSourceActivated(MessagingMenu::Application::Source &ASo
 {
 	foreach (int id, FNotifications->notifications())
 	{
-		if (FNotifications->notificationById(id).data.value(NDR_CONTACT_JID).toString() == FMessagingItems.key(&ASource) &&
-			FMessagingMenuAllowTypes.contains(FNotifications->notificationById(id).typeId))
-		{
+		Jid contactJid = FNotifications->notificationById(id).data.value(NDR_CONTACT_JID).toString();
+		if (QString(FNotifications->notificationById(id).typeId + "|" +
+					contactJid.pFull()) == FMessagingItems.key(&ASource))
 			FNotifications->activateNotification(id);
-		}
 	}
 }
+
+void UnityIntegration::onStatusChanged(MessagingMenu::Status AStatus)
+{
+	int newStatus;
+	switch (AStatus)
+	{
+	case MessagingMenu::Available:
+		newStatus = STATUS_ONLINE;
+		break;
+	case MessagingMenu::Away:
+		newStatus = STATUS_AWAY;
+		break;
+	case MessagingMenu::Busy:
+		newStatus = STATUS_DND;
+		break;
+	case MessagingMenu::Invisible:
+		newStatus = STATUS_INVISIBLE;
+		break;
+	case MessagingMenu::Offline:
+		newStatus = STATUS_OFFLINE;
+		break;
+	default:
+		newStatus = STATUS_NULL_ID;
+		break;
+	}
+	FStatusChanger->setMainStatus(newStatus);
+}
+
 #endif
 
 void UnityIntegration::onShutdownStarted()

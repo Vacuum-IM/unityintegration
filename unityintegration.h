@@ -9,20 +9,20 @@
 #include <dbusmenu-qt/dbusmenuexporter.h>
 
 #ifdef MESSAGING_MENU
-#include <thirdparty/messaging-menu-qt/messaging-menu-qt.hpp>
+#include "thirdparty/messaging-menu-qt/messaging-menu-qt.hpp"
 #endif
 
 #include <definitions/notificationdataroles.h>
 #include <definitions/notificationtypes.h>
+#include <definitions/optionvalues.h>
 #include <interfaces/iavatars.h>
 #include <interfaces/ipluginmanager.h>
 #include <interfaces/ifilestreamsmanager.h>
 #include <interfaces/inotifications.h>
 #include <interfaces/imultiuserchat.h>
 #include <interfaces/imainwindow.h>
-#include <interfaces/ixmppstreams.h>
 #include <interfaces/ioptionsmanager.h>
-#include <definitions/optionvalues.h>
+#include <interfaces/istatuschanger.h>
 #include <utils/action.h>
 #include <utils/options.h>
 
@@ -57,16 +57,18 @@ protected slots:
 	void onProfileOpened(const QString &AProfile);
 #ifdef MESSAGING_MENU
 	void onSourceActivated(MessagingMenu::Application::Source &ASource);
+	void onStatusChanged(MessagingMenu::Status AStatus);
 #endif
 	void onShutdownStarted();
 
 private:
 	IFileStreamsManager *FFileStreamsManager;
 	IMainWindowPlugin *FMainWindowPlugin;
-	IMultiUserChatPlugin *FMultiUserChatPlugin;
+	IMultiUserChatManager *FMultiUserChatManager;
 	INotifications *FNotifications;
 	IOptionsManager *FOptionsManager;
 	IPluginManager *FPluginManager;
+	IStatusChanger *FStatusChanger;
 	IAvatars *FAvatars;
 
 	QList<QString> FNotificationAllowTypes;
@@ -83,11 +85,8 @@ private:
 
 	QWeakPointer<DBusMenuExporter> menu_export;
 	QDBusInterface *FUnityInterface;
-	QDBusInterface *FThirdUnityInterface;
-
 
 #ifdef MESSAGING_MENU
-	QList<QString> FMessagingMenuAllowTypes;
 	MessagingMenu::Application *FMessagingMenu;
 
 	QHash<QString, MessagingMenu::Application::Source*> FMessagingItems;

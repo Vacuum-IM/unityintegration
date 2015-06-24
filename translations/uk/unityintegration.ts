@@ -8,16 +8,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Provides integration with Dash panel Unity</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Show roster</source>
         <translation>Показати ростер</translation>
-    </message>
-    <message>
-        <source>Show all hidden conferences</source>
-        <translation>Показати всі приховані конференції</translation>
     </message>
     <message>
         <source>File Transfers</source>
@@ -36,8 +28,8 @@
         <translation>Налаштування</translation>
     </message>
     <message>
-        <source>Quit</source>
-        <translation>Вийти</translation>
+        <source>Provides integration with Unity</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

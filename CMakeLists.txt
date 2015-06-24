@@ -27,10 +27,11 @@ include_directories("${DBUSMENUQT_INCLUDE_DIRS}")
 
 pkg_check_modules(MESSAGINGMENU messaging-menu)
 
-set(MESSAGING_MENU OFF CACHE BOOL "Unity Messaging Menu API support. Only Ubuntu 14.04 and newer.")
+set(MESSAGING_MENU OFF CACHE BOOL "Unity Messaging Menu and Launcher API support. Only Ubuntu 14.04 and newer.")
 
 if(${MESSAGING_MENU} AND MESSAGINGMENU_FOUND)
-	message(STATUS "Building with Unity Messaging Menu API support")
+	message(STATUS "Building with Unity Messaging Menu and Launcher API support")
+	add_definitions(-DMESSAGING_MENU)
 	set(SOURCES ${SOURCES} thirdparty/messaging-menu-qt/messaging-menu-qt.cpp)
 	set(HEADERS ${HEADERS} thirdparty/messaging-menu-qt/messaging-menu-qt.hpp)
 	set(MOC_HEADERS ${MOC_HEADERS} thirdparty/messaging-menu-qt/messaging-menu-qt.hpp)

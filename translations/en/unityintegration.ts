@@ -8,16 +8,8 @@
         <translation>Unity Integration</translation>
     </message>
     <message>
-        <source>Provides integration with Dash panel Unity</source>
-        <translation>Provides integration with Dash panel Unity</translation>
-    </message>
-    <message>
         <source>Show roster</source>
         <translation>Show roster</translation>
-    </message>
-    <message>
-        <source>Show all hidden conferences</source>
-        <translation>Show all hidden conferences</translation>
     </message>
     <message>
         <source>File Transfers</source>
@@ -36,8 +28,8 @@
         <translation>Change Profile</translation>
     </message>
     <message>
-        <source>Quit</source>
-        <translation>Quit</translation>
+        <source>Provides integration with Unity</source>
+        <translation>Provides integration with Unity</translation>
     </message>
 </context>
 </TS>

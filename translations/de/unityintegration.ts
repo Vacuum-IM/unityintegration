@@ -8,16 +8,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Provides integration with Dash panel Unity</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Show roster</source>
         <translation>Roster anzeigen</translation>
-    </message>
-    <message>
-        <source>Show all hidden conferences</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>File Transfers</source>
@@ -36,8 +28,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Quit</source>
-        <translation>Schließen</translation>
+        <source>Provides integration with Unity</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

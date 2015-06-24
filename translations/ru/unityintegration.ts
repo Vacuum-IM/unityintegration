@@ -8,16 +8,8 @@
         <translation>Интеграция с Unity</translation>
     </message>
     <message>
-        <source>Provides integration with Dash panel Unity</source>
-        <translation>Предоставляет интеграцию в Dash панель Unity</translation>
-    </message>
-    <message>
         <source>Show roster</source>
         <translation>Показать список контактов</translation>
-    </message>
-    <message>
-        <source>Show all hidden conferences</source>
-        <translation>Показать все скрытые конференции</translation>
     </message>
     <message>
         <source>File Transfers</source>
@@ -36,8 +28,8 @@
         <translation>Настройки</translation>
     </message>
     <message>
-        <source>Quit</source>
-        <translation>Выход</translation>
+        <source>Provides integration with Unity</source>
+        <translation>Предоставляет интеграцию с Unity</translation>
     </message>
 </context>
 </TS>
